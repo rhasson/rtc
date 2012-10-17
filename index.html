@@ -1,0 +1,43 @@
+<html><head></head>
+<body>
+
+<video id='vid' width='200' height='200' autoplay></video>
+<br>
+<button id='start' >Start</button>
+<button id='stop' >Stop</button>
+<canvas></canvas>
+</body>
+<script>
+	var localStream, i;
+	document.querySelector('#start').addEventListener('click', function(evt) {
+		var video, canvas, cxt;
+		start();
+		video = document.querySelector('video');
+		canvas = document.querySelector('canvas');
+		cxt = canvas.getContext('2d');
+		i = setInterval(function() { capture(video, canvas, cxt) }, 100);
+	}, false);
+	
+	document.querySelector('#stop').addEventListener('click', function(evt) {
+		clearInterval(i);
+		localStream.stop();
+	}, false);
+
+	function start() {
+		navigator.webkitGetUserMedia({video: true}, function(stream) {
+			localStream = stream;
+			video = document.querySelector('video');
+			video.src = window.webkitURL.createObjectURL(stream);
+		});
+	}
+
+	function capture(video, canvas, cxt){
+		canvas.width = video.videoWidth / 2;
+		canvas.height = video.videoHeight / 2;
+		if (video.videoWidth > 0) {
+			cxt.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, canvas.width, canvas.height);
+		}
+	}
+
+</script>
+</html>
