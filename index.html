@@ -1,4 +1,6 @@
-<html><head></head>
+<html><head>
+	<script src="http://cdn.binaryjs.com/0/binary.js"></script>
+</head>
 <body>
 
 <video id='vid' width='200' height='200' autoplay></video>
@@ -8,7 +10,22 @@
 <canvas></canvas>
 </body>
 <script>
-	var localStream, i;
+	var localStream, i, bs_stream;
+	var client = new BinaryClient('ws://localhost:9000');
+	client.on('open', function() {
+		bs_stream = client.createStream({type: 'write'});
+	});
+
+/*	client.on('stream', function(s, m) {
+		var parts = [];
+		s.on('data', function(data) {
+			parts.push(data);
+		});
+		s.on('end', function() {
+			//write to DOM
+		});
+	});
+*/
 	document.querySelector('#start').addEventListener('click', function(evt) {
 		var video, canvas, cxt;
 		start();
@@ -32,10 +49,14 @@
 	}
 
 	function capture(video, canvas, cxt){
+		var buf;
 		canvas.width = video.videoWidth / 2;
 		canvas.height = video.videoHeight / 2;
 		if (video.videoWidth > 0) {
 			cxt.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, canvas.width, canvas.height);
+			data = cxt.getImageData(0, 0, canvas.width, canvas.height).data;
+			buf = new Uint8Array(data);
+			bs_stream.write(buf);
 		}
 	}
 
