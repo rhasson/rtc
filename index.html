@@ -10,55 +10,46 @@
 <canvas></canvas>
 </body>
 <script>
-	var localStream, i, bs_stream;
 	var client = new BinaryClient('ws://localhost:9000');
 	client.on('open', function() {
-		bs_stream = client.createStream({type: 'write'});
-	});
-
-/*	client.on('stream', function(s, m) {
-		var parts = [];
-		s.on('data', function(data) {
-			parts.push(data);
-		});
-		s.on('end', function() {
-			//write to DOM
-		});
-	});
-*/
-	document.querySelector('#start').addEventListener('click', function(evt) {
-		var video, canvas, cxt;
-		start();
-		video = document.querySelector('video');
-		canvas = document.querySelector('canvas');
-		cxt = canvas.getContext('2d');
-		i = setInterval(function() { capture(video, canvas, cxt) }, 100);
-	}, false);
-	
-	document.querySelector('#stop').addEventListener('click', function(evt) {
-		clearInterval(i);
-		localStream.stop();
-	}, false);
-
-	function start() {
-		navigator.webkitGetUserMedia({video: true}, function(stream) {
-			localStream = stream;
+		var localStream, i, bs_stream;
+		
+		document.querySelector('#start').addEventListener('click', function(evt) {
+			var video, canvas, cxt;
+			start();
 			video = document.querySelector('video');
-			video.src = window.webkitURL.createObjectURL(stream);
-		});
-	}
+			canvas = document.querySelector('canvas');
+			cxt = canvas.getContext('2d');
+			i = setInterval(function() { capture(video, canvas, cxt) }, 100);
+		}, false);
+		
+		document.querySelector('#stop').addEventListener('click', function(evt) {
+			clearInterval(i);
+			client.close();
+			localStream.stop();
+		}, false);
 
-	function capture(video, canvas, cxt){
-		var buf;
-		canvas.width = video.videoWidth / 2;
-		canvas.height = video.videoHeight / 2;
-		if (video.videoWidth > 0) {
-			cxt.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, canvas.width, canvas.height);
-			data = cxt.getImageData(0, 0, canvas.width, canvas.height).data;
-			buf = new Uint8Array(data);
-			bs_stream.write(buf);
+		function start() {
+			navigator.webkitGetUserMedia({video: true}, function(stream) {
+				localStream = stream;
+				video = document.querySelector('video');
+				video.src = window.webkitURL.createObjectURL(stream);
+				//bs_stream = client.createStream({type: 'write'});
+			});
 		}
-	}
+
+		function capture(video, canvas, cxt){
+			var buf;
+			canvas.width = video.videoWidth / 2;
+			canvas.height = video.videoHeight / 2;
+			if (video.videoWidth > 0) {
+				cxt.drawImage(video, 0, 0, video.videoWidth, video.videoHeight, 0, 0, canvas.width, canvas.height);
+				data = cxt.getImageData(0, 0, canvas.width, canvas.height).data;
+				buf = new Uint8Array(data);
+				client.send(data, {w: canvas.width, h: canvas.height});
+			}
+		}
+	});
 
 </script>
 </html>

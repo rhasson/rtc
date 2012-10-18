@@ -1,27 +1,34 @@
-var fs = require('fs');
-var e = require('express');
-var s = e();
-var BServer = require('binaryjs').BinaryServer;
-var bs = BServer({port: 9000});
+var fs = require('fs'),
+	express = require('express'),
+	server = express(),
+	BServer = require('binaryjs').BinaryServer,
+	bs = BServer({port: 9000}),
+	Canvas = require('canvas'),
+	Image = Canvas.Image;
 
-s.use(e.static(__dirname));
+server.use(express.static(__dirname));
 
-s.listen(8080, 'localhost');
+server.listen(8080, 'localhost');
 
 bs.on('connection', function(client) {
-	console.log('connected', client);
+	console.log('Client connected');
 	client.on('error', function(err) {
-		console.log('error: ', e.stack, e.message);
+		console.log('error: ', err.stack, err.message);
 	});
 
-	var count = 0;
+	var count = 1;
 	client.on('stream', function(stream, meta) {
-		if (meta.type === 'write') {
-			count++;
+		
+		stream.on('data', function(data) {
+			console.log('Stream data');
 			//var f = fs.createWriteStream(__dirname + '/pic'+count+'.png');
-			//stream.pipe(f);
-			console.log(stream);
-		}
+			//f.end(data);
+			console.log(data);
+			count++;
+		});
+		stream.on('end', function() {
+			console.log('Stream ended');
+		});
 	});
 });
 
